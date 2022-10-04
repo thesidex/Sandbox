@@ -44,13 +44,13 @@ namespace sample_api.Controllers
 
             var client = new RestClient(url);
 
-            var request = new RestRequest(Method.GET);
+            var request = new RestRequest(url, Method.Get);
 
             request.AddHeader("cache-control", "no-cache");
 
             request.AddHeader("x-ms-client-id", "be56900c-69ed-4902-9f56-99af97bafdde");
 
-            IRestResponse response = client.Execute(request);
+            RestResponse response = client.Execute(request);
 
             List<WeatherForecast> forecasts = new List<WeatherForecast>();
 
