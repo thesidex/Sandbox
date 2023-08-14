@@ -1,13 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using sample_app.Shared;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-using sampleApi;
-using System.Net.Http;
 
 namespace sample_app.Server.Controllers
 {
@@ -38,14 +29,14 @@ namespace sample_app.Server.Controllers
 
                 List<Shared.WeatherForecast> retCollection = new List<Shared.WeatherForecast>();
 
-                foreach(sampleApi.WeatherForecast forecast in forecasts)
+                foreach (sampleApi.WeatherForecast forecast in forecasts)
                 {
                     Shared.WeatherForecast retData = new Shared.WeatherForecast();
 
                     retData.Date = forecast.Date.DateTime;
                     retData.TemperatureC = forecast.TemperatureC;
-                    retData.Summary = forecast.Summary;
-
+                    //retData.Summary = forecast.Summary;
+                    retData.Category = forecast.Category;
                     retCollection.Add(retData);
                 }
 

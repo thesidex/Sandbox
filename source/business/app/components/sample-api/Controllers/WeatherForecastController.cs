@@ -1,13 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-using RestSharp;
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
+using RestSharp;
+using System.Collections.Generic;
 
 namespace sample_api.Controllers
 {
@@ -74,6 +69,18 @@ namespace sample_api.Controllers
 
                         data.TemperatureC = (int)temp;
                         data.Summary = "";
+
+                        foreach (var category in forecast.airAndPollen)
+                        {
+                            if (category.name.Contains("AirQuality"))
+                            {
+                                data.Category = category.category;
+                            }
+                        }
+
+
+
+
 
                         forecasts.Add(data);
                     }

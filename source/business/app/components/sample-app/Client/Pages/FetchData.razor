@@ -1,4 +1,5 @@
 ﻿@page "/fetchdata"
+@using System.Globalization;
 @using sample_app.Shared
 @inject HttpClient Http
 
@@ -18,17 +19,17 @@ else
                 <th>Date</th>
                 <th>Temp. (C)</th>
                 <th>Temp. (F)</th>
-                <th>Summary</th>
+                <th>Category</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var forecast in forecasts)
             {
                 <tr>
-                    <td>@forecast.Date.ToShortDateString()</td>
+                    <td>@forecast.Date.ToString("ddd, dd MMM yyyy")</td>
                     <td>@forecast.TemperatureC</td>
                     <td>@forecast.TemperatureF</td>
-                    <td>@forecast.Summary</td>
+                    <td>@forecast.Category</td>
                 </tr>
             }
         </tbody>

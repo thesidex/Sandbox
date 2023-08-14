@@ -4,6 +4,8 @@
     <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>sample-app.Server</RootNamespace>
     <AssemblyName>$(AssemblyName.Replace(' ', '_'))</AssemblyName>
+	  <Nullable>enable</Nullable>
+	  <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
