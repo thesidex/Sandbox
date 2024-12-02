@@ -1,13 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
+using RestSharp;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
-using RestSharp;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
 
 namespace sample_api.Controllers
 {
@@ -21,73 +19,56 @@ namespace sample_api.Controllers
         };
 
         private readonly ILogger<WeatherForecastController> _logger;
+        private readonly AzureWeatherSettings _azureWeatherSettings;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        public WeatherForecastController(ILogger<WeatherForecastController> logger, IOptions<AzureWeatherSettings> azureWeatherSettings)
         {
             _logger = logger;
+            _azureWeatherSettings = azureWeatherSettings.Value;
         }
 
         [HttpGet]
-        public IEnumerable<WeatherForecast> Get()
+        public async Task<IActionResult> Get()
         {
-            //var rng = new Random();
-            //return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            //{
-            //    Date = DateTime.Now.AddDays(index),
-            //    TemperatureC = rng.Next(-20, 55),
-            //    Summary = Summaries[rng.Next(Summaries.Length)]
-            //})
-            //.ToArray();
-
-
-            string url = $"https://atlas.microsoft.com/weather/forecast/daily/json?api-version=1.0&query=29.76328%2C-95.36327&duration=5&subscription-key=IspvfmeOHOjnFlLoaOie3B8b-eDjACwyG_0SnNHMMjQ";
+            string url = $"{_azureWeatherSettings.BaseUrl}?api-version=1.0&query=29.76328%2C-95.36327&duration=5&subscription-key={_azureWeatherSettings.SubscriptionKey}";
 
             var client = new RestClient(url);
-
-            var request = new RestRequest(url, Method.Get);
+            var request = new RestRequest
+            {
+                Method = Method.Get
+            };
 
             request.AddHeader("cache-control", "no-cache");
+            request.AddHeader("x-ms-client-id", _azureWeatherSettings.ClientId);
 
-            request.AddHeader("x-ms-client-id", "be56900c-69ed-4902-9f56-99af97bafdde");
-
-            RestResponse response = client.Execute(request);
-
-            List<WeatherForecast> forecasts = new List<WeatherForecast>();
-
-            if (response.IsSuccessful)
+            try
             {
-                string content = response.Content;
+                var response = await client.ExecuteAsync(request);
 
-                Root weatherObjects = JsonConvert.DeserializeObject<Root>(content);
-
-                List<Forecast> mapForecasts = weatherObjects.forecasts;
-
-                if (mapForecasts != null)
+                if (!response.IsSuccessful || string.IsNullOrEmpty(response.Content))
                 {
-                    foreach (Forecast forecast in mapForecasts)
-                    {
-                        WeatherForecast data = new WeatherForecast();
-
-                        data.Date = forecast.date;
-
-                        double temp = forecast.temperature.maximum.value;
-
-                        data.TemperatureC = (int)temp;
-                        data.Summary = "";
-
-                        forecasts.Add(data);
-                    }
-
-
+                    _logger.LogError("Failed to fetch weather data: {StatusCode}", response.StatusCode);
+                    return StatusCode(500, "Failed to retrieve weather data.");
                 }
 
+                var weatherObjects = JsonConvert.DeserializeObject<Root>(response.Content);
+                var rng = new Random();
+
+                var forecasts = weatherObjects?.forecasts?.Select(f => new WeatherForecast
+                {
+                    Date = f.date,
+                    TemperatureC = (int)f.temperature.maximum.value,
+                    Summary = Summaries[rng.Next(Summaries.Length)],
+                    AirQuality = f.airAndPollen?.FirstOrDefault(a => a.name.Contains("AirQuality"))?.category
+                }).ToList();
+
+                return Ok(forecasts);
             }
-
-
-
-            return forecasts;
-
-
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while fetching weather data.");
+                return StatusCode(500, "Internal server error.");
+            }
         }
     }
 }

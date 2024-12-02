@@ -2,9 +2,9 @@
 @using sample_app.Shared
 @inject HttpClient Http
 
-<h1>Weather forecast</h1>
+<h1>Weather Forecast</h1>
 
-<p>This component demonstrates fetching data from the server.</p>
+<p>This component demonstrates fetching data from the server and searching by date.</p>
 
 @if (forecasts == null)
 {
@@ -12,35 +12,64 @@
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Temp. (C)</th>
-                <th>Temp. (F)</th>
-                <th>Summary</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var forecast in forecasts)
-            {
+    <form>
+        <div>
+            <label for="searchDate">Search Date:</label>
+            <input type="date" id="searchDate" @bind="searchDate" class="form-control" />
+            <button type="button" @onclick="SearchForecasts" class="btn btn-primary mt-3">Search</button>
+        </div>
+    </form>
+
+    <div class="mt-4">
+        <table class="table">
+            <thead>
                 <tr>
-                    <td>@forecast.Date.ToShortDateString()</td>
-                    <td>@forecast.TemperatureC</td>
-                    <td>@forecast.TemperatureF</td>
-                    <td>@forecast.Summary</td>
+                    <th>Date</th>
+                    <th>Temp. (C)</th>
+                    <th>Temp. (F)</th>
+                    <th>Summary</th>
+                    <th>Air Quality</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var forecast in filteredForecasts)
+                {
+                    <tr>
+                        <td>@forecast.Date.ToShortDateString()</td>
+                        <td>@forecast.TemperatureC</td>
+                        <td>@forecast.TemperatureF</td>
+                        <td>@forecast.Summary</td>
+                        <td>@forecast.AirQuality</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }
 
 @code {
     private WeatherForecast[] forecasts;
+    private WeatherForecast[] filteredForecasts;
+    private DateTime? searchDate;
 
     protected override async Task OnInitializedAsync()
     {
+        // Fetch data from the server
         forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("WeatherForecast");
+        filteredForecasts = forecasts; // Initialize the filtered list with all forecasts
     }
 
+    private async Task SearchForecasts()
+    {
+        if (searchDate.HasValue)
+        {
+            // Filter forecasts based on the selected date
+            filteredForecasts = forecasts.Where(f => f.Date.Date == searchDate.Value.Date).ToArray();
+        }
+        else
+        {
+            // Reset to all forecasts if no date is selected
+            filteredForecasts = forecasts;
+        }
+    }
 }

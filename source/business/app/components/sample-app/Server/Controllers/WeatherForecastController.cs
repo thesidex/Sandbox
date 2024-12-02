@@ -1,13 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using sample_app.Shared;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-
-using sampleApi;
 using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace sample_app.Server.Controllers
 {
@@ -27,8 +24,6 @@ namespace sample_app.Server.Controllers
         {
             try
             {
-
-
                 sampleApi.Client client = new sampleApi.Client("http://localhost:5000", new HttpClient());
 
                 ICollection<sampleApi.WeatherForecast> forecasts = null;
@@ -38,17 +33,17 @@ namespace sample_app.Server.Controllers
 
                 List<Shared.WeatherForecast> retCollection = new List<Shared.WeatherForecast>();
 
-                foreach(sampleApi.WeatherForecast forecast in forecasts)
+                foreach (sampleApi.WeatherForecast forecast in forecasts)
                 {
                     Shared.WeatherForecast retData = new Shared.WeatherForecast();
 
                     retData.Date = forecast.Date.DateTime;
                     retData.TemperatureC = forecast.TemperatureC;
                     retData.Summary = forecast.Summary;
+                    retData.AirQuality = forecast.AirQuality;
 
                     retCollection.Add(retData);
                 }
-
 
                 return retCollection;
 
@@ -59,6 +54,20 @@ namespace sample_app.Server.Controllers
                 throw;
             }
 
+        }
+        [HttpPost]
+        public async Task<IActionResult> Search(DateTime searchDate)
+        {
+
+            var forecasts = new List<Shared.WeatherForecast>
+            {
+                new Shared.WeatherForecast { Date = searchDate, TemperatureC=23, Summary="Sunny", AirQuality="Good" }
+
+            };
+
+            forecasts = forecasts.Where(f => f.Date.Date == searchDate.Date).ToList();
+
+            return await Task.FromResult(new JsonResult(forecasts));
         }
     }
 }
